@@ -22,6 +22,16 @@ static void draw_background()
 	putimage_ex(img_background, &rect_dst);
 }
 
+void draw_remain_hp()
+{
+	static IMAGE* img_ui_heart = ResourcesManager::Instance()->find_image("ui_heart");
+	Rect rect_dst = { 0, 10, img_ui_heart->getwidth(), img_ui_heart->getheight() };
+	for (int i = 0; i < CharacterManager::Instance()->get_player()->get_hp(); i++)
+	{
+		rect_dst.x = 10 + i * 40;
+		putimage_ex(img_ui_heart, &rect_dst);
+	}
+}
 
 int main(int argc, char** argv)
 {
@@ -41,6 +51,8 @@ int main(int argc, char** argv)
 
 		return -1;
 	}
+
+	play_audio(_T("bgm"), true);
 
 	const std::chrono::nanoseconds frame_duration(1000000000 / 144);
 	std::chrono::steady_clock::time_point last_tick = std::chrono::steady_clock::now();
@@ -71,6 +83,7 @@ int main(int argc, char** argv)
 		draw_background();
 		CharacterManager::Instance()->on_render();
 		CollisionManager::Instance()->on_debug_render();
+		draw_remain_hp();
 
 		FlushBatchDraw();
 

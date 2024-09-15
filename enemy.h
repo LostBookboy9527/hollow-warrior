@@ -58,7 +58,7 @@ public:
     }
 
     void throw_barbs();
-    void throw_swords();
+    void throw_sword();
 
     void on_dash();
     void on_throw_silk();
@@ -78,5 +78,5 @@ private:
     CollisionBox* collision_box_silk = nullptr;
 };
 
-#endif // !
+#endif // !_ENEMY_H_
 

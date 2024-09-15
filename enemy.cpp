@@ -2,6 +2,7 @@
 #include "character_manager.h"
 #include "resources_manager.h"
 #include "collision_manager.h"
+#include "enemy_state_nodes.h"
 
 Enemy::Enemy()
 {
@@ -121,6 +122,20 @@ Enemy::Enemy()
 			animation_jump_right.add_frame(ResourcesManager::Instance()->find_atlas("enemy_jump_right"));
 		}
 		{
+			AnimationGroup& animation_run = animation_pool["run"];
+			Animation& animation_run_left = animation_run.left;
+			animation_run_left.set_inerval(0.05f);
+			animation_run_left.set_loop(true);
+			animation_run_left.set_anchor_mode(Animation::AnchorMode::BottomCentered);
+			animation_run_left.add_frame(ResourcesManager::Instance()->find_atlas("enemy_run_left"));
+
+			Animation& animation_run_right = animation_run.right;
+			animation_run_right.set_inerval(0.05f);
+			animation_run_right.set_loop(true);
+			animation_run_right.set_anchor_mode(Animation::AnchorMode::BottomCentered);
+			animation_run_right.add_frame(ResourcesManager::Instance()->find_atlas("enemy_run_right"));
+		}
+		{
 			AnimationGroup& animation_squat = animation_pool["squat"];
 
 			Animation& animation_squat_left = animation_squat.left;
@@ -204,17 +219,31 @@ Enemy::Enemy()
 		animation_dash_in_floor_left.set_inerval(0.1f);
 		animation_dash_in_floor_left.set_loop(false);
 		animation_dash_in_floor_left.set_anchor_mode(Animation::AnchorMode::BottomCentered);
-		animation_dash_in_floor_left.add_frame(ResourcesManager::Instance()->find_atlas("enemy_vfx_dash_in_floor_left"));
+		animation_dash_in_floor_left.add_frame(ResourcesManager::Instance()->find_atlas("enemy_vfx_dash_on_floor_left"));
 
 		Animation& animation_dash_in_floor_right = animation_dash_on_floor_vfx.right;
 		animation_dash_in_floor_right.set_inerval(0.1f);
 		animation_dash_in_floor_right.set_loop(false);
 		animation_dash_in_floor_right.set_anchor_mode(Animation::AnchorMode::BottomCentered);
-		animation_dash_in_floor_right.add_frame(ResourcesManager::Instance()->find_atlas("enemy_vfx_dash_in_floor_right"));
+		animation_dash_in_floor_right.add_frame(ResourcesManager::Instance()->find_atlas("enemy_vfx_dash_on_floor_right"));
 	}
 
 	{
 		//TODO: ×´Ì¬»ú³õÊ¼»¯
+		state_machine.register_state("aim", new EnemyAimState());
+		state_machine.register_state("throw_barb", new EnemyThrowBarbState());
+		state_machine.register_state("throw_sword", new EnemyThrowSwordState());
+		state_machine.register_state("throw_silk", new EnemyThrowSilkState());
+		state_machine.register_state("dash_in_air", new EnemyDashInAirState());
+		state_machine.register_state("dash_on_floor", new EnemyDashOnFloorState());
+		state_machine.register_state("idle", new EnemyIdleState());
+		state_machine.register_state("dead", new EnemyDeadState());
+		state_machine.register_state("fall", new EnemyFallState());
+		state_machine.register_state("jump", new EnemyJumpState());
+		state_machine.register_state("run", new EnemyRunState());
+		state_machine.register_state("squat", new EnemySquatState());
+
+		state_machine.set_entry("idle");
 	}
 }
 
@@ -257,7 +286,8 @@ void Enemy::on_update(float delta)
 			bool can_remove = barb->check_valid();
 			if (can_remove) delete barb;
 			return can_remove;
-		}), barb_list.end());
+		}),
+		barb_list.end());
 
     sword_list.erase(std::remove_if(
         sword_list.begin(), sword_list.end(),
@@ -266,7 +296,8 @@ void Enemy::on_update(float delta)
             bool can_remove = !sword->check_valid();
             if (can_remove) delete sword;
             return can_remove;
-        }), sword_list.end());
+        }), 
+		sword_list.end());
 }
 
 void Enemy::on_render()
@@ -318,7 +349,7 @@ void Enemy::throw_barbs()
 	}
 }
 
-void Enemy::throw_swords()
+void Enemy::throw_sword()
 {
 	Sword* new_sword = new Sword(get_logic_center(), is_facing_left);
 	sword_list.push_back(new_sword);
